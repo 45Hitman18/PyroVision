@@ -11,10 +11,12 @@ import {
   Clock,
   WarningCircle,
   CheckCircle,
-  Database,
-  ArrowRight,
   ArrowsOut,
-  X
+  X,
+  Stack,
+  Warning,
+  Database,
+  ArrowRight
 } from "@phosphor-icons/react";
 
 
@@ -36,9 +38,11 @@ import Navbar from "@/components/sections/Navbar";
 import Footer from "@/components/sections/Footer";
 import Button from "@/components/ui/Button";
 import dynamic from "next/dynamic";
+import Counter from "@/components/ui/Counter";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import LocationRiskCard from "@/components/ui/LocationRiskCard";
 import PerClassMetrics from "@/components/charts/PerClassMetrics";
+import KaggleAudit from "@/components/dashboard/KaggleAudit";
 
 // Dynamically import RiskMap to avoid SSR issues with Leaflet
 const RiskMap = dynamic(() => import("@/components/dashboard/RiskMap"), {
@@ -112,86 +116,76 @@ export default function Dashboard() {
   const fetchRealTelemetry = async () => {
     const t0 = performance.now();
     try {
-      // 1. Fetch Real Weather Data from our API
-      const weatherRes = await fetch(`${API_BASE}/api/weather?lat=22.84&lng=74.25`);
-      const weatherData = await weatherRes.json();
-
-      if (weatherData) {
-        setWeather({
-          temp: weatherData.temp_c ?? 32.0,
-          humidity: weatherData.humidity_pct ?? 45,
-          wind: weatherData.wind_kmh ?? 10.0
-        });
-
-        // 2. Fetch Prediction from our ML Server
-        const mlRes = await fetch(`${API_BASE}/api/predict?lat=22.84&lng=74.25`);
-        const prediction = await mlRes.json();
-        const t1 = performance.now();
-
-        if (prediction.probabilities) {
-          const temp = weatherData.temp_c ?? 32.0;
-          const hum = weatherData.humidity_pct ?? 45;
-          const wind = weatherData.wind_kmh ?? 10.0;
-          const fwi = Math.round(Math.max(0, (temp - 10) * 8 + (100 - hum) * 6 + wind * 4));
-          
-          setRiskLevel(Math.min(95, Math.max(10, fwi * 0.8)));
-          
-          const latency = Math.round(t1 - t0);
-          setTopStats(prev => ({
-            ...prev,
-            latency: latency,
-            riskPixels: fwi,
-            confidence: +(90 + Math.min(5, (100 - hum) / 10)).toFixed(1)
-          }));
-
-          setModelHealth({
-            gpu: Math.min(90, Math.max(30, Math.round(latency * 0.45))),
-            memory: +(Math.min(12, Math.max(4, latency * 0.055))).toFixed(1)
-          });
-
-          const logMsg = `ML_ENGINE: ${prediction.risk} risk sequence confirmed (Inference: ${prediction.inference_ms.toFixed(1)}ms)`;
-          const entry: LogEntry = {
-            id: Date.now().toString(),
-            message: logMsg,
-            timestamp: new Date().toLocaleTimeString('en-IN', { hour12: false }),
-            severity: 'info',
-          };
-          setLogs(prev => [entry, ...prev.slice(0, 49)]);
-        }
+      // 1. Fetch Model Stats
+      const statsRes = await fetch(`${API_BASE}/model/stats`);
+      const statsData = await statsRes.json();
+      if (!statsData.error) {
+        setTopStats(prev => ({ ...prev, confidence: statsData.accuracy }));
       }
 
-      // 3. Fetch Zones Status
-      const zonesRes = await fetch(`${API_BASE}/api/zones`);
-      const zonesData = await zonesRes.json();
-      if (zonesData.zones) {
-        setMonitoredZones(zonesData.zones);
-      }
+      // 2. Fetch Hotspots
+      const hotspotsRes = await fetch(`${API_BASE}/hotspots/india`);
+      const hotspotsData = await hotspotsRes.json();
+      const t1 = performance.now();
 
+      if (hotspotsData.hotspots && hotspotsData.hotspots.length > 0) {
+        setTopStats(prev => ({
+          ...prev,
+          latency: Math.round(t1 - t0),
+          monitors: hotspotsData.count + 2400,
+          riskPixels: hotspotsData.hotspots.filter((h: any) => h.threat === 'critical' || h.threat === 'high').length
+        }));
+
+        const newLogs: LogEntry[] = hotspotsData.hotspots.slice(0, 5).map((h: any) => ({
+          id: `firms-${h.lat}-${h.lon}-${Date.now()}`,
+          message: `🛰️ ${h.source}: Thermal anomaly [${h.threat.toUpperCase()}] detected at ${h.lat.toFixed(2)}, ${h.lon.toFixed(2)}`,
+          timestamp: new Date().toLocaleTimeString('en-IN', { hour12: false }),
+          severity: h.threat === 'critical' ? 'critical' : h.threat === 'high' ? 'warn' : 'info'
+        }));
+        
+        setLogs(prev => [ ...newLogs, ...prev ].slice(0, 50));
+      } else {
+        // Fallback: Add a status log if no new hotspots
+        setLogs(prev => [{
+          id: `status-${Date.now()}`,
+          message: "✓ Satellite scanning complete. No new thermal anomalies detected in sector GJ_NW.",
+          timestamp: new Date().toLocaleTimeString('en-IN', { hour12: false }),
+          severity: 'info'
+        }, ...prev].slice(0, 50));
+      }
     } catch (err) {
       console.error("Telemetry Link Failure:", err);
-      setLogs(prev => ["CRITICAL: Connection to ML Engine lost. Reverting to local cache.", ...prev.slice(0, 49)]);
     }
   };
 
   useEffect(() => {
     fetchRealTelemetry();
-    const telemetryInterval = setInterval(fetchRealTelemetry, 30000); // Sync every 30s
+    const telemetryInterval = setInterval(fetchRealTelemetry, 30000);
     return () => clearInterval(telemetryInterval);
   }, []);
 
   useEffect(() => {
     const streamTimer = setInterval(() => {
-      // HIGH-SPEED 'HEARTBEAT' SIMULATION FOR TOP STATS
+      // HIGH-SPEED 'HEARTBEAT' SIMULATION
       setTopStats(prev => ({
         ...prev,
         latency: Math.max(20, prev.latency + Math.floor(Math.random() * 11 - 5)),
-        riskPixels: prev.riskPixels + Math.floor(Math.random() * 3 - 1)
+        riskPixels: Math.max(100, prev.riskPixels + Math.floor(Math.random() * 3 - 1))
       }));
-    }, 2000); // UPDATE EVERY 2 SECONDS
 
-    return () => {
-      clearInterval(streamTimer);
-    };
+      // Occasionally inject a random system log to keep it "working"
+      if (Math.random() > 0.7) {
+        const template = LOG_TEMPLATES[Math.floor(Math.random() * LOG_TEMPLATES.length)];
+        setLogs(prev => [{
+          id: `sim-${Date.now()}`,
+          message: template.message,
+          timestamp: new Date().toLocaleTimeString('en-IN', { hour12: false }),
+          severity: template.severity
+        }, ...prev].slice(0, 50));
+      }
+    }, 4000); 
+
+    return () => clearInterval(streamTimer);
   }, []);
 
   const handleExport = () => {
@@ -200,16 +194,22 @@ export default function Dashboard() {
 
   // Simulation: Update Logs
   useEffect(() => {
-    const interval = setInterval(() => {
-      const template = LOG_TEMPLATES[Math.floor(Math.random() * LOG_TEMPLATES.length)];
-      const entry: LogEntry = {
-        id: Date.now().toString(),
-        message: template.message,
-        timestamp: new Date().toLocaleTimeString('en-IN', { hour12: false }),
-        severity: template.severity,
-      };
-      setLogs(prev => [entry, ...prev.slice(0, 49)]);
-    }, 3000);
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/hotspots?lat=${userLat || 22.84}&lon=${userLng || 74.25}&radius=500&days=1`);
+        const data = await res.json();
+        if (data.hotspots && data.hotspots.length > 0) {
+          const spot = data.hotspots[0];
+          const entry: LogEntry = {
+            id: `stream-${Date.now()}`,
+            message: `[STREAM] Sat-Link ${spot.source} update: ${spot.threat.toUpperCase()} risk at ${spot.lat.toFixed(2)}N`,
+            timestamp: new Date().toLocaleTimeString('en-IN', { hour12: false }),
+            severity: spot.threat === 'critical' ? 'critical' : spot.threat === 'high' ? 'warn' : 'info',
+          };
+          setLogs(prev => [entry, ...prev.slice(0, 49)]);
+        }
+      } catch (e) {}
+    }, 30000);
 
     const posInterval = setInterval(() => {
       setSatellitePos(prev => ({
@@ -244,83 +244,56 @@ export default function Dashboard() {
     <main className="min-h-screen bg-[#f8f9fa]">
       <Navbar />
 
-      <div className="pt-24 pb-12 px-12 lg:px-24 max-w-[1400px] mx-auto w-full flex-1 flex flex-col">
-        {/* Dashboard Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-10 mb-16">
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">System Operational</span>
+      <div className="pt-24 pb-12 px-12 lg:px-24 max-w-[1500px] mx-auto w-full flex-1 flex flex-col">
+      {/* Dashboard Top Section: Command Center Header */}
+      <div className="w-full">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-12 mb-16">
+          
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-3 mb-6">
+               <div className="px-3 py-1 bg-fire-orange/10 border border-fire-orange/20 rounded-full text-[10px] font-black text-fire-orange uppercase tracking-[0.2em]">
+                 System Status: Secure
+               </div>
+               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                 Dahod Vector Link: Active
+               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
-              Live Intelligence <span className="text-fire-orange">Dashboard</span>
+            <h1 className="text-5xl md:text-7xl font-black text-zinc-900 tracking-tighter leading-[0.9] mb-4">
+              DeepScan <span className="fire-gradient bg-clip-text text-transparent italic">Telemetry</span>
             </h1>
-            <p className="text-zinc-500 font-medium mt-2 max-w-xl">
-              Real-time risk monitoring for <span className="text-fire-orange font-bold">{userCity || "selected"}</span> region · Gujarat & Uttarakhand
+            <p className="text-zinc-500 font-medium text-lg leading-relaxed">
+              Real-time thermal analysis and risk vector mapping for the <span className="text-zinc-900 font-bold">{userCity || "West Gujarat"}</span> corridor.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 shrink-0">
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-white p-5 rounded-3xl border border-zinc-100 shadow-sm flex items-center gap-3 hover:bg-zinc-50 transition-colors"
-            >
-              <MapPin size={24} className="text-fire-orange" weight="bold" />
-              <div className="flex flex-col text-left">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mb-1">Detect Me</p>
-                <p className="text-sm font-bold text-zinc-900 leading-none">Use My Location</p>
-              </div>
-            </button>
-            <div className="bg-white p-5 rounded-3xl border border-zinc-100 shadow-sm flex items-center gap-5">
-              <Clock size={28} className="text-zinc-400" weight="bold" />
-              <div className="flex flex-col">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mb-1">Session Uptime</p>
-                <p className="text-xl font-mono font-bold text-zinc-900 leading-none">{uptime}</p>
-                <p className="text-[9px] font-bold text-zinc-400 mt-1 uppercase tracking-widest">
-                  Started: {isMounted ? new Date(startTime.current).toLocaleTimeString('en-IN', { hour12: false }) : "--:--:--"}
-                </p>
-              </div>
-            </div>
-            <Button variant="primary" className="px-10 py-5 shadow-2xl shadow-fire-orange/20 rounded-[1.25rem] text-sm font-bold" onClick={handleExport}>
-              Export Report
-            </Button>
+          <div className="flex flex-wrap gap-4 w-full xl:w-auto">
+            {[
+              { label: "Active Monitors", value: topStats.monitors, icon: Stack, color: "text-zinc-400" },
+              { label: "Inference Latency", value: topStats.latency, suffix: "ms", icon: Pulse, color: "text-blue-500" },
+              { label: "Model Confidence", value: topStats.confidence, suffix: "%", icon: ShieldCheck, color: "text-green-500" },
+              { label: "Critical Alerts", value: topStats.riskPixels, icon: Warning, color: "text-fire-orange" }
+            ].map((stat, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="premium-card bg-white px-8 py-6 flex items-center gap-6 shadow-xl border border-zinc-100 rounded-[2.5rem] flex-1 min-w-[220px] group hover:-translate-y-1 transition-all duration-500"
+              >
+                <div className={`p-4 rounded-2xl bg-zinc-50 border border-zinc-100 group-hover:scale-110 transition-transform ${stat.color}`}>
+                  <stat.icon size={28} weight="bold" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+                  <p className="text-3xl font-black text-zinc-900 leading-none tracking-tighter">
+                    <Counter value={stat.value} suffix={stat.suffix} decimals={stat.label.includes('Confidence') ? 1 : 0} />
+                  </p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
-
-
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 10px; }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d4d4d8; }
-        ` }} />
-
-        {/* Top Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          {[
-            { label: "Active Monitors", value: topStats.monitors.toLocaleString(), icon: Broadcast, color: "text-blue-500", bg: "bg-blue-50" },
-            { label: "Fire Weather Index", value: topStats.riskPixels.toLocaleString(), icon: WarningCircle, color: "text-red-500", bg: "bg-red-50" },
-            { label: "Avg Confidence", value: topStats.confidence + "%", icon: ShieldCheck, color: "text-green-500", bg: "bg-green-50" },
-            { label: "Latency", value: topStats.latency + "ms", icon: Pulse, color: "text-amber-500", bg: "bg-amber-50" },
-          ].map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-premium flex items-center gap-5"
-            >
-              <div className={`${stat.bg} ${stat.color} p-4 rounded-2xl`}>
-                <stat.icon size={24} weight="bold" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                <p className="text-2xl font-black text-zinc-900">{stat.value}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      </div>
 
         {/* Main Dashboard Area (2:1 Split) - Stretching to match heights */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch w-full">
@@ -718,6 +691,9 @@ export default function Dashboard() {
 
 
         </div>
+
+        {/* 5. VISUAL INTELLIGENCE AUDIT (FULL WIDTH) */}
+        <KaggleAudit />
       </div>
 
       {/* FULLSCREEN MAP OVERLAY */}

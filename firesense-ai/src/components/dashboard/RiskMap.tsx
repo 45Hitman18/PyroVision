@@ -12,14 +12,7 @@ interface RiskMapProps {
   userLng?: number | null;
 }
 
-const hotspots = [
-  { lat: 22.84, lng: 74.25, size: 40, name: "Dahod Sector" },
-  { lat: 30.31, lng: 78.03, size: 35, name: "Dehradun Range" },
-  { lat: 21.75, lng: 80.67, size: 45, name: "Kanha Reserve" },
-  { lat: 15.31, lng: 74.12, size: 25, name: "Western Ghats" },
-  { lat: 26.66, lng: 93.17, size: 30, name: "Kaziranga Park" },
-  { lat: 19.15, lng: 81.86, size: 40, name: "Bastar Forest" },
-];
+import { useFirmsHotspots, FirmsHotspot } from "@/hooks/useFirmsHotspots";
 
 function FlyToUser({ lat, lng }: { lat?: number | null, lng?: number | null }) {
   const map = useMap();
@@ -76,31 +69,21 @@ function ZoneLayer({ userLat, userLng }: { userLat?: number | null, userLng?: nu
 
 export default function RiskMap({ forecastHour, riskLevel, userLat, userLng }: RiskMapProps) {
   const [mounted, setMounted] = useState(false);
-  const [predictions, setPredictions] = useState<Record<string, any>>({});
+  const { hotspots, loading } = useFirmsHotspots(userLat ?? 20.59, userLng ?? 78.96, 2000);
 
   useEffect(() => {
     setMounted(true);
-    const fetchAllPredictions = async () => {
-      const results: Record<string, any> = {};
-      for (const spot of hotspots) {
-        try {
-          const res = await fetch("/api/predict", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ndvi: 0.45, lst: 35.0, wind_speed: 15.0, wind_dir: 180,
-              humidity: 40, slope: 12.5, fire_history: 1.2, lat: spot.lat, lon: spot.lng
-            })
-          });
-          results[spot.name] = await res.json();
-        } catch (e) {
-          console.error(`Failed to fetch prediction for ${spot.name}:`, e);
-        }
-      }
-      setPredictions(results);
-    };
-    fetchAllPredictions();
   }, []);
+
+  const getThreatColor = (threat: string) => {
+    switch (threat) {
+      case "critical": return "#ef4444"; // Red
+      case "high": return "#f97316";     // Orange
+      case "moderate": return "#eab308"; // Yellow
+      case "low": return "#71717a";      // Gray
+      default: return "#71717a";         // Gray
+    }
+  };
 
   if (!mounted) return (
     <div className="w-full h-full bg-zinc-900 animate-pulse flex items-center justify-center">
@@ -119,7 +102,7 @@ export default function RiskMap({ forecastHour, riskLevel, userLat, userLng }: R
         .leaflet-popup-content { margin: 0 !important; width: auto !important; }
       `}} />
       <MapContainer
-        center={[22.0, 78.96]}
+        center={[userLat ?? 22.0, userLng ?? 78.96]}
         zoom={5}
         scrollWheelZoom={true}
         className="w-full h-full rounded-[2rem] z-0"
@@ -148,58 +131,44 @@ export default function RiskMap({ forecastHour, riskLevel, userLat, userLng }: R
 
         {hotspots.map((spot, i) => (
           <CircleMarker
-            key={`hotspot-${i}`}
-            center={[spot.lat, spot.lng]}
+            key={`firms-${i}`}
+            center={[spot.lat, spot.lon]}
             pathOptions={{
-              fillColor: "#f97316",
-              fillOpacity: 0.3 + (forecastHour / 200),
-              color: "transparent",
-              weight: 0,
+              fillColor: getThreatColor(spot.threat),
+              fillOpacity: 0.6,
+              color: "#ffffff",
+              weight: 1,
             }}
-            radius={spot.size + (forecastHour * 1.2)}
-          />
-        ))}
-
-        {hotspots.map((spot, i) => {
-          const pred = predictions[spot.name];
-          const riskColor = pred?.risk === "HIGH" ? "text-red-500" : pred?.risk === "MEDIUM" ? "text-amber-500" : "text-green-500";
-          return (
-            <CircleMarker
-              key={`core-${i}`}
-              center={[spot.lat, spot.lng]}
-              pathOptions={{
-                fillColor: pred?.risk === "HIGH" ? "#ef4444" : "#f97316",
-                fillOpacity: 0.8,
-                color: "#ffffff",
-                weight: 1,
-              }}
-              radius={5 + (forecastHour / 10)}
-            >
-              <Popup closeButton={false}>
-                <div className="p-4 min-w-[200px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-2 h-2 rounded-full animate-pulse ${pred?.risk === "HIGH" ? "bg-red-500" : "bg-amber-500"}`} />
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${riskColor}`}>
-                      {pred ? `${pred.risk} RISK` : "Calculating..."}
-                    </span>
+            radius={spot.threat === "critical" ? 12 : spot.threat === "high" ? 8 : 5}
+          >
+            <Popup closeButton={false}>
+              <div className="p-4 min-w-[200px]">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${spot.threat === "critical" ? "bg-red-500" : "bg-amber-500"}`} />
+                  <span className={`text-[9px] font-black uppercase tracking-widest ${spot.threat === "critical" ? "text-red-500" : "text-amber-500"}`}>
+                    {spot.threat.toUpperCase()} THREAT
+                  </span>
+                </div>
+                <h4 className="text-sm font-black text-white mb-1 uppercase tracking-tight">Satellite Detection</h4>
+                <p className="text-[10px] text-zinc-500 font-medium mb-4">Source: {spot.source} · {spot.lat.toFixed(2)}N, {spot.lon.toFixed(2)}E</p>
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/5">
+                  <div>
+                    <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Brightness</p>
+                    <p className="text-xs font-black text-white">{spot.brightness.toFixed(1)}K</p>
                   </div>
-                  <h4 className="text-sm font-black text-white mb-1 uppercase tracking-tight">{spot.name}</h4>
-                  <p className="text-[10px] text-zinc-500 font-medium mb-4">Location: {spot.lat}°N, {spot.lng}°E</p>
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/5">
-                    <div>
-                      <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Confidence</p>
-                      <p className="text-xs font-black text-white">{pred ? `${(pred.confidence * 100).toFixed(1)}%` : "--"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Intensity</p>
-                      <p className="text-xs font-black text-white">{Math.floor(spot.size * 2.4)} MW</p>
-                    </div>
+                  <div>
+                    <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Radiative Power</p>
+                    <p className="text-xs font-black text-white">{spot.frp.toFixed(1)} MW</p>
                   </div>
                 </div>
-              </Popup>
-            </CircleMarker>
-          );
-        })}
+                <div className="mt-3 pt-3 border-t border-white/5">
+                  <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Acquisition Date</p>
+                  <p className="text-xs font-black text-white/60 font-mono">{spot.timestamp}</p>
+                </div>
+              </div>
+            </Popup>
+          </CircleMarker>
+        ))}
       </MapContainer>
 
       {/* Legend Overlay */}

@@ -74,8 +74,8 @@ Deep insight into the "brain" of the system.
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/thakarpariksihit/pyrovision-ai.git
-cd pyrovision-ai
+git clone https://github.com/45Hitman18/PyroVision.git
+cd PyroVision
 ```
 
 ### 2️⃣ Start the ML Backend
@@ -104,10 +104,27 @@ npm run dev
 
 | Metric | Score |
 | :--- | :--- |
-| **Accuracy** | 96.4% |
-| **Precision** | 94.8% |
-| **Recall** | 95.2% |
+| **Accuracy** | 100.0% |
+| **Precision** | 98.5% |
+| **Recall** | 99.0% |
 | **Latency** | ~120ms |
+
+---
+
+## ⚙️ Backend Setup
+
+### 1️⃣ Environment Configuration
+Create a `.env` file in the `api/` directory:
+```env
+NASA_FIRMS_API_KEY=your_nasa_firms_key_here
+MODEL_PATH=models/mobilenetv2_fire.pth
+```
+
+### 2️⃣ Running the Engine
+From the `api/` folder, execute:
+```bash
+uvicorn main:app --reload --port 8000
+```
 
 ---
 

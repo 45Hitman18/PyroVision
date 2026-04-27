@@ -1,0 +1,87 @@
+{
+    "dataset": "phylake1337/fire-dataset",
+    "sample_size": 100,
+    "overall_accuracy": 96.0,
+    "class_performance": {
+        "FIRE": {
+            "precision": 0.97,
+            "recall": 0.95
+        },
+        "NORMAL": {
+            "precision": 0.94,
+            "recall": 0.98
+        }
+    },
+    "sample_predictions": [
+        {
+            "filename": "fire.1.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.8569,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.10.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9344,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.100.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9343,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.101.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9185,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.102.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9521,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.103.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9372,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.104.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9318,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.105.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9728,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.106.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.9253,
+            "status": "PASS"
+        },
+        {
+            "filename": "fire.107.png",
+            "true_label": "FIRE",
+            "predicted_label": "FIRE",
+            "confidence": 0.8908,
+            "status": "PASS"
+        }
+    ]
+}
