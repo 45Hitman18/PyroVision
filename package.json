@@ -1,0 +1,8 @@
+{
+  "name": "pyrovision-root",
+  "version": "1.0.0",
+  "description": "Root launcher for PyroVision",
+  "scripts": {
+    "dev": "cd firesense-ai && npm run dev"
+  }
+}

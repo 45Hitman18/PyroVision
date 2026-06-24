@@ -1,5 +1,4 @@
 import Navbar from "@/components/sections/Navbar";
-
 import Hero from "@/components/sections/Hero";
 import RiskZoneMap from "@/components/sections/RiskZoneMap";
 import ModelArchitecture from "@/components/sections/ModelArchitecture";
@@ -13,7 +12,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#f5f4f0] selection:bg-fire-orange selection:text-white">
       <Navbar />
-
       <Hero />
       <RiskZoneMap />
       <ModelArchitecture />

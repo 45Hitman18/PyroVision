@@ -24,7 +24,7 @@ export default function Footer() {
             
             <div className="flex items-center gap-4">
               <Link 
-                href="https://github.com/45Hitman18" 
+                href="https://github.com/45Hitman18/PyroVision" 
                 target="_blank"
                 className="p-2 bg-white rounded-xl border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-300 transition-all shadow-sm"
               >
@@ -38,7 +38,7 @@ export default function Footer() {
                 <LinkedinLogo size={18} weight="bold" />
               </Link>
               <Link 
-                href="https://thakar-parikshit.vercel.app" 
+                href="https://thakarparikshit.vercel.app/" 
                 target="_blank"
                 className="p-2 bg-white rounded-xl border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-300 transition-all shadow-sm"
               >
@@ -52,12 +52,18 @@ export default function Footer() {
             <h4 className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em]">Resources</h4>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
               {[
-                { label: "Paper (arXiv)", href: "#" },
-                { label: "GitHub Repository", href: "#" },
-                { label: "HuggingFace Demo", href: "#" },
-                { label: "Dataset (NASA FIRMS)", href: "#" },
+                { label: "Paper (arXiv)", href: "https://zenodo.org/records/20782440", external: true },
+                { label: "GitHub Repository", href: "https://github.com/45Hitman18/PyroVision", external: true },
+                { label: "HuggingFace Demo", href: "https://huggingface.co/spaces/45Hitman18/PyroVision", external: true },
+                { label: "Dataset (NASA FIRMS)", href: "https://firms.modaps.eosdis.nasa.gov/", external: true },
               ].map((link) => (
-                <Link key={link.label} href={link.href} className="text-[11px] font-medium text-zinc-500 hover:text-fire-orange transition-colors">
+                <Link 
+                  key={link.label} 
+                  href={link.href} 
+                  target={link.external ? "_blank" : undefined}
+                  rel={link.external ? "noopener noreferrer" : undefined}
+                  className="text-[11px] font-medium text-zinc-500 hover:text-fire-orange transition-colors"
+                >
                   {link.label}
                 </Link>
               ))}

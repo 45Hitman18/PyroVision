@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, useMap, ZoomControl, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, WMSTileLayer, CircleMarker, useMap, ZoomControl, Popup, Polygon, Polyline, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { RISK_ZONES, useNearestRiskZone } from "@/hooks/useNearestRiskZone";
 
@@ -10,6 +10,18 @@ interface RiskMapProps {
   riskLevel: number;
   userLat?: number | null;
   userLng?: number | null;
+  isDrawingMode?: boolean;
+  drawnPoints?: { lat: number; lng: number }[];
+  onAddPoint?: (point: { lat: number; lng: number }) => void;
+}
+
+function MapClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
 }
 
 import { useFirmsHotspots, FirmsHotspot } from "@/hooks/useFirmsHotspots";
@@ -67,8 +79,17 @@ function ZoneLayer({ userLat, userLng }: { userLat?: number | null, userLng?: nu
   );
 }
 
-export default function RiskMap({ forecastHour, riskLevel, userLat, userLng }: RiskMapProps) {
+export default function RiskMap({
+  forecastHour,
+  riskLevel,
+  userLat,
+  userLng,
+  isDrawingMode = false,
+  drawnPoints = [],
+  onAddPoint
+}: RiskMapProps) {
   const [mounted, setMounted] = useState(false);
+  const [activeLayer, setActiveLayer] = useState<"base" | "ndvi" | "falseColor">("base");
   const { hotspots, loading } = useFirmsHotspots(userLat ?? 20.59, userLng ?? 78.96, 2000);
 
   useEffect(() => {
@@ -114,8 +135,72 @@ export default function RiskMap({ forecastHour, riskLevel, userLat, userLng }: R
           attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
         />
         
+        {activeLayer === "ndvi" && (
+          <WMSTileLayer
+            url="https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi"
+            layers="MODIS_Terra_NDVI_8Day"
+            format="image/png"
+            transparent={true}
+            opacity={0.7}
+            attribution='&copy; <a href="https://earthdata.nasa.gov/gibs">NASA GIBS</a>'
+          />
+        )}
+        {activeLayer === "falseColor" && (
+          <WMSTileLayer
+            url="https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi"
+            layers="MODIS_Terra_CorrectedReflectance_Bands721"
+            format="image/png"
+            transparent={true}
+            opacity={0.75}
+            attribution='&copy; <a href="https://earthdata.nasa.gov/gibs">NASA GIBS</a>'
+          />
+        )}
+        
         <FlyToUser lat={userLat} lng={userLng} />
         <ZoneLayer userLat={userLat} userLng={userLng} />
+
+        {isDrawingMode && onAddPoint && (
+          <MapClickHandler onClick={(lat, lng) => onAddPoint({ lat, lng })} />
+        )}
+
+        {/* Render custom geofence vertices & polyline/polygon */}
+        {drawnPoints.map((pt, idx) => (
+          <CircleMarker
+            key={`drawn-vertex-${idx}`}
+            center={[pt.lat, pt.lng]}
+            pathOptions={{
+              fillColor: "#f97316",
+              fillOpacity: 1.0,
+              color: "#ffffff",
+              weight: 1.5,
+            }}
+            radius={5}
+          />
+        ))}
+
+        {drawnPoints.length >= 3 && (
+          <Polygon
+            positions={drawnPoints.map(pt => [pt.lat, pt.lng])}
+            pathOptions={{
+              fillColor: "#f97316",
+              fillOpacity: 0.2,
+              color: "#f97316",
+              weight: 2,
+              dashArray: "5, 5"
+            }}
+          />
+        )}
+        
+        {drawnPoints.length >= 2 && (
+          <Polyline
+            positions={drawnPoints.map(pt => [pt.lat, pt.lng])}
+            pathOptions={{
+              color: "#f97316",
+              weight: 2,
+              dashArray: "5, 5"
+            }}
+          />
+        )}
 
         {userLat && userLng && (
           <CircleMarker
@@ -170,6 +255,27 @@ export default function RiskMap({ forecastHour, riskLevel, userLat, userLng }: R
           </CircleMarker>
         ))}
       </MapContainer>
+
+      {/* Spectral Overlays Control */}
+      <div className="absolute bottom-10 left-10 z-10 bg-black/60 backdrop-blur-xl p-5 rounded-3xl border border-white/10 shadow-2xl flex flex-col gap-3">
+        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Spectral Layer Overlays</span>
+        <div className="flex gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5">
+          {[
+            { id: "base", label: "Terrain" },
+            { id: "ndvi", label: "NDVI (Veg)" },
+            { id: "falseColor", label: "Thermal (SWIR)" }
+          ].map((layer) => (
+            <button
+              key={layer.id}
+              onClick={() => setActiveLayer(layer.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer
+                ${activeLayer === layer.id ? "bg-red-600 text-white shadow-md shadow-red-600/30 border border-red-500/20" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+            >
+              {layer.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Legend Overlay */}
       <div className="absolute bottom-10 right-10 z-10 bg-black/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-2xl">

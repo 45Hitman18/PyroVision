@@ -90,11 +90,10 @@ export default function PaperPage() {
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-colors relative z-10 ${
-                  activeSection === item.id
+                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-colors relative z-10 ${activeSection === item.id
                     ? "text-white"
                     : "text-[#525252] hover:text-[#111111]"
-                }`}
+                  }`}
               >
                 {activeSection === item.id && (
                   <motion.div
@@ -165,7 +164,7 @@ export default function PaperPage() {
 
       {/* SECTION 3: MAIN CONTENT AREA */}
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col gap-32">
-        
+
         {/* ABSTRACT SECTION (Stay as is - Centered within main container) */}
         <section id="abstract" className="scroll-mt-24 max-w-4xl mx-auto">
           <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#f97316] mb-8 text-center">Abstract</h4>
@@ -186,7 +185,7 @@ export default function PaperPage() {
 
         {/* START OF CENTERED CONTENT (INTRODUCTION ONWARDS) */}
         <div className="flex flex-col gap-32 text-center max-w-4xl mx-auto">
-          
+
           {/* 1. INTRODUCTION SECTION */}
           <section id="introduction" className="scroll-mt-24">
             <div className="flex flex-col items-center gap-5 mb-10">
@@ -200,7 +199,7 @@ export default function PaperPage() {
               <p>
                 For decades, fire detection has relied heavily on traditional hardware sensors, including ionization smoke detectors, photoelectric sensors, and thermal detectors. While these devices are cost-effective, they possess inherent limitations. Ionization sensors require physical contact with combustion byproducts, meaning they can only trigger an alarm once smoke has reached the sensor's physical location.
               </p>
-              
+
               <div className="bg-[#f97316]/5 border-2 border-dashed border-[#f97316]/20 p-10 rounded-3xl my-14 relative overflow-hidden group max-w-2xl mx-auto">
                 <p className="text-[#f97316] font-black text-2xl italic leading-tight">
                   "According to the NFPA, fire departments respond to a fire every 23 seconds in the United States, highlighting the urgent need for millisecond-level detection."

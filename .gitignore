@@ -12,3 +12,18 @@ node_modules/
 dist/
 build/
 .DS_Store
+firesense-ai/ml/data/
+firesense-ai/ml/outputs/
+data/
+
+# Local state databases
+api/chat_ids.json
+api/subscriptions.json
+
+# Downloaded CCTV media assets
+api/*.jpg
+api/*.mp4
+
+# Editor/OS backups and temp files
+*.backup
+*.bak

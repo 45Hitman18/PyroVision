@@ -28,8 +28,11 @@ export default function Results() {
 
   useEffect(() => {
     setMounted(true);
-    fetch("http://localhost:8000/model/stats")
-      .then(res => res.json())
+    fetch("/api/ml/model/stats")
+      .then(async res => {
+        if (!res.ok) throw new Error("Stats fetch failed");
+        return res.json();
+      })
       .then(data => setStats(data))
       .catch(err => console.error("Stats fetch failed:", err));
   }, []);
@@ -195,12 +198,14 @@ export default function Results() {
             </h3>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 lg:justify-end">
-            <a href="/research_paper.html?from=/#results" target="_blank" rel="noopener noreferrer">
-              <Button variant="primary" className="px-8 py-4">Read Preprint on arXiv →</Button>
+            <a href="https://zenodo.org/records/20782440" target="_blank" rel="noopener noreferrer">
+              <Button variant="primary" className="px-8 py-4">Read Preprint on Zenodo →</Button>
             </a>
-            <Button variant="secondary" className="px-8 py-4 bg-transparent border-zinc-700 text-white hover:bg-zinc-800">
-              View Code on GitHub →
-            </Button>
+            <a href="https://github.com/45Hitman18/PyroVision" target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary" className="px-8 py-4 bg-transparent border-zinc-700 text-white hover:bg-zinc-800">
+                View Code on GitHub →
+              </Button>
+            </a>
           </div>
         </div>
       </AnimatedItem>

@@ -25,10 +25,10 @@ const insights = [
 ];
 
 export default function GradCAMSection() {
-  const [imgSrc, setImgSrc] = useState(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/gradcam/sample`);
+  const [imgSrc, setImgSrc] = useState(`${process.env.NEXT_PUBLIC_API_URL || '/api/ml'}/api/gradcam/sample`);
 
   useEffect(() => {
-    setImgSrc(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/gradcam/sample?t=${Date.now()}`);
+    setImgSrc(`${process.env.NEXT_PUBLIC_API_URL || '/api/ml'}/api/gradcam/sample?t=${Date.now()}`);
   }, []);
 
   return (

@@ -93,9 +93,11 @@ export default function FinalCTA() {
           >
             Try Live Demo
           </Button>
-          <Button variant="secondary" className="px-10 py-4 text-lg bg-transparent border-white/20 text-white hover:bg-white/5">
-            Star on GitHub ★
-          </Button>
+          <a href="https://github.com/45Hitman18/PyroVision" target="_blank" rel="noopener noreferrer">
+            <Button variant="secondary" className="px-10 py-4 text-lg bg-transparent border-white/20 text-white hover:bg-white/5 w-full sm:w-auto">
+              Star on GitHub ★
+            </Button>
+          </a>
         </AnimatedItem>
       </div>
     </AnimatedSection>

@@ -52,20 +52,20 @@ export default function PerClassMetrics() {
             barGap={4}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               tick={{ fontSize: 9, fontWeight: 700, fill: '#a1a1aa' }}
               axisLine={false}
               tickLine={false}
             />
-            <YAxis 
-              domain={[0.80, 1.00]} 
+            <YAxis
+              domain={[0.80, 1.00]}
               tick={{ fontSize: 9, fill: '#a1a1aa' }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-            
+
             <Bar name="precision" dataKey="precision" fill="#7F77DD" radius={[2, 2, 0, 0]} barSize={12} />
             <Bar name="recall" dataKey="recall" fill="#1D9E75" radius={[2, 2, 0, 0]} barSize={12} />
             <Bar name="f1" dataKey="f1" fill="#ff4500" radius={[2, 2, 0, 0]} barSize={12} />

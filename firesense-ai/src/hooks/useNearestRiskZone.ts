@@ -4,6 +4,7 @@ export interface RiskZone {
   name: string;
   state: string;
   risk: "HIGH" | "MEDIUM" | "LOW";
+  distance?: number;
 }
 
 export const RISK_ZONES: RiskZone[] = [
@@ -30,7 +31,11 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number): numb
 
 export function useNearestRiskZone(lat: number | null, lng: number | null) {
   if (lat === null || lng === null) {
-    return { nearest: null, distanceKm: null, allZones: RISK_ZONES };
+    return { 
+      nearest: null, 
+      distanceKm: null, 
+      allZones: RISK_ZONES.map(zone => ({ ...zone, distance: undefined })) 
+    };
   }
 
   const zonesWithDistance = RISK_ZONES.map((zone) => ({

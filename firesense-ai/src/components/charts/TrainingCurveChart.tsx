@@ -79,7 +79,7 @@ export default function TrainingCurveChart() {
               x={bestEpoch} 
               stroke="#BA7517" 
               strokeDasharray="3 3" 
-              label={{ value: 'OPTIMAL', position: 'top', fill: '#BA7517', fontSize: 8, fontWeight: 900, tracking: '1px' }} 
+              label={{ value: 'OPTIMAL', position: 'top', fill: '#BA7517', fontSize: 8, fontWeight: 900, letterSpacing: '1px' }} 
             />
             <Line 
               name="train" 

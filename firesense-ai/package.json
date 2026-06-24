@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "dev:ml": "cd ml && python server.py",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev:ml\"",
+    "dev": "node scripts/dev-single.js",
+    "dev:next": "next dev --turbopack",
+    "dev:ml": "cd ../api && python unified_server.py",
+    "dev:all": "node scripts/dev-single.js",
     "build": "next build --turbopack",
     "start": "next start"
   },

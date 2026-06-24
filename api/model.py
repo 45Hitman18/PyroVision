@@ -33,11 +33,11 @@ def load_model():
     if os.path.exists(MODEL_PATH):
         try:
             model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
-            print(f"✓ Model loaded from {MODEL_PATH}")
+            print(f"[OK] Model loaded from {MODEL_PATH}")
         except Exception as e:
-            print(f"⚠ Error loading weights: {e}. Using uninitialized model.")
+            print(f"[WARN] Error loading weights: {e}. Using uninitialized model.")
     else:
-        print(f"⚠ Model path {MODEL_PATH} not found. Using uninitialized model.")
+        print(f"[WARN] Model path {MODEL_PATH} not found. Using uninitialized model.")
         
     model.eval()
     return model

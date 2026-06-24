@@ -1,14 +1,15 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { ReactNode } from "react";
 
 interface AnimatedItemProps {
   children: ReactNode;
   className?: string;
+  id?: string;
 }
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { 
     opacity: 1, 
@@ -21,11 +22,12 @@ const itemVariants = {
   },
 };
 
-export default function AnimatedItem({ children, className }: AnimatedItemProps) {
+export default function AnimatedItem({ children, className, id }: AnimatedItemProps) {
   return (
     <motion.div
       className={className}
       variants={itemVariants}
+      id={id}
     >
       {children}
     </motion.div>

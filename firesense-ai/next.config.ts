@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/predict",
-        destination: "http://localhost:8000/predict",
+        source: "/api/ml/:path*",
+        destination: "http://127.0.0.1:8000/:path*",
       },
     ];
   },

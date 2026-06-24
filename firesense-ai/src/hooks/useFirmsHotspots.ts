@@ -20,7 +20,7 @@ export function useFirmsHotspots(lat: number = 20.59, lon: number = 78.96, radiu
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:8000/hotspots?lat=${lat}&lon=${lon}&radius=${radius}&days=1`)
+    fetch(`/api/ml/hotspots?lat=${lat}&lon=${lon}&radius=${radius}&days=1`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch FIRMS data");
         return res.json();

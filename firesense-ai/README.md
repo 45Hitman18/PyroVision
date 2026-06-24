@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🖥️ PyroVision: Frontend Surveillance UI (Next.js)
 
-## Getting Started
+This subdirectory contains the frontend dashboard and tactical monitoring interface for the **PyroVision** platform.
 
-First, run the development server:
+For the full system setup, API guides, and machine learning models, please refer to the main repository [Root README](../README.md).
 
+---
+
+## 📚 Academic Context & Publication
+The research paper for this project, authored by **Thakar Pariksihit**, is officially published on Zenodo.
+- **Official Link**: [Zenodo Record 20782440](https://zenodo.org/records/20782440)
+
+---
+
+## ✨ Surveillance Features Implemented
+- **Leaflet.js Tactical Navigator**: Map plotting satellite hotspot anomalies and drawing custom geofences.
+- **7-Day Weather & FWI Forecasting**: Queries Open-Meteo for max temperature, min humidity, and max wind speed, and computes dynamic hazard curves using Recharts.
+- **Mission Control HUD logs**: Real-time streaming log dispatcher monitoring satellite downlinks.
+- **PyTorch ML Diagnostic Centre**: Monitors live inference throughput (FPS), GPU utilisation, VRAM consumption, Precision-Recall validation curves, and decodes Grad-CAM interpretability heatmaps.
+- **Academic PDF Generator**: Local client-side compile engine that exports professional double-column papers based on current telemetry.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Launch Development Server
+```bash
+npm run dev
+```
+*Note: To run both the Next.js UI and the FastAPI backend together, run `npm run dev` from the **root directory** of the repository instead.*
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛠️ Folder Structure
+- `/src/app/dashboard`: Main dashboard layout and tracking control loops.
+- `/src/components/dashboard`: Interactive map canvas, geofence drawers, and custom HUDs.
+- `/src/components/charts`: Interactive model telemetry widgets.
+- `/scripts`: Custom launcher scripts for spawning single uvicorn/Next dev processes.
